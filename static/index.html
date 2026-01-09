@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirMenu - Touchless AR Restaurant Menu</title>
+    <meta name="description" content="Order food with just your hand gestures - no touch required!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Camera Background -->
+    <video id="camera" autoplay playsinline></video>
+    <canvas id="cursor-canvas"></canvas>
+    
+    <!-- Main Container -->
+    <div id="app">
+        <!-- Hand Status Indicator -->
+        <div id="hand-status" class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">Initializing camera...</span>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <div class="glass-card hero-card">
+                <div class="hero-icon">🍽️</div>
+                <h1 class="hero-title">AirMenu</h1>
+                <p class="hero-subtitle">Touchless Dining Experience</p>
+                <button class="glass-button primary glow" data-action="start-ordering">
+                    <span class="button-icon">👆</span>
+                    START ORDERING
+                    <div class="dwell-progress"></div>
+                </button>
+                <p class="gesture-hint">Point your index finger to navigate • Hold to select</p>
+            </div>
+        </div>
+
+        <!-- Category Screen -->
+        <div id="category-screen" class="screen">
+            <div class="screen-header">
+                <button class="glass-button back-btn" data-action="go-home">
+                    <span>←</span>
+                    <div class="dwell-progress"></div>
+                </button>
+                <h2>Select Category</h2>
+                <button class="glass-button cart-btn" data-action="go-cart">
+                    <span>🛒</span>
+                    <span class="cart-count">0</span>
+                    <div class="dwell-progress"></div>
+                </button>
+            </div>
+            <div id="categories-grid" class="categories-grid"></div>
+        </div>
+
+        <!-- Items Screen -->
+        <div id="items-screen" class="screen">
+            <div class="screen-header">
+                <button class="glass-button back-btn" data-action="go-categories">
+                    <span>←</span>
+                    <div class="dwell-progress"></div>
+                </button>
+                <h2 id="items-title">Menu Items</h2>
+                <button class="glass-button cart-btn" data-action="go-cart">
+                    <span>🛒</span>
+                    <span class="cart-count">0</span>
+                    <div class="dwell-progress"></div>
+                </button>
+            </div>
+            <div id="items-list" class="items-list"></div>
+        </div>
+
+        <!-- Cart Screen -->
+        <div id="cart-screen" class="screen">
+            <div class="screen-header">
+                <button class="glass-button back-btn" data-action="go-categories">
+                    <span>←</span>
+                    <div class="dwell-progress"></div>
+                </button>
+                <h2>Your Cart</h2>
+                <div class="spacer"></div>
+            </div>
+            <div id="cart-content" class="cart-content">
+                <div id="cart-items" class="cart-items"></div>
+                <div id="cart-summary" class="cart-summary glass-card">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST (18%)</span>
+                        <span id="gst">₹0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span id="total">₹0</span>
+                    </div>
+                    <button class="glass-button primary glow checkout-btn" data-action="checkout">
+                        <span>💳</span> CHECKOUT
+                        <div class="dwell-progress"></div>
+                    </button>
+                </div>
+            </div>
+            <div id="cart-empty" class="cart-empty glass-card">
+                <div class="empty-icon">🛒</div>
+                <p>Your cart is empty</p>
+                <button class="glass-button primary" data-action="go-categories">
+                    Browse Menu
+                    <div class="dwell-progress"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Receipt Screen -->
+        <div id="receipt-screen" class="screen">
+            <div class="glass-card receipt-card">
+                <div class="receipt-header">
+                    <div class="success-icon">✓</div>
+                    <h2>Order Confirmed!</h2>
+                    <p class="order-number">Order #<span id="order-id">0000</span></p>
+                </div>
+                <div id="receipt-items" class="receipt-items"></div>
+                <div class="receipt-totals">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="receipt-subtotal">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST (18%)</span>
+                        <span id="receipt-gst">₹0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Paid</span>
+                        <span id="receipt-total">₹0</span>
+                    </div>
+                </div>
+                <p class="receipt-thanks">Thank you for dining with us! 🙏</p>
+                <button class="glass-button primary glow" data-action="new-order">
+                    <span>🔄</span> NEW ORDER
+                    <div class="dwell-progress"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MediaPipe Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    
+    <!-- App Scripts -->
+    <script src="/static/js/handTracker.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
